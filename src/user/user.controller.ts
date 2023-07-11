@@ -1,11 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Inject } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserLoginDto } from './dto/user-login.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+
+  @Inject(JwtService)
+  private jwtService: JwtService;
+
+  constructor(private readonly userService: UserService) { }
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
@@ -15,6 +21,26 @@ export class UserController {
   @Get()
   findAll() {
     return this.userService.findAll();
+  }
+
+  @Get('init')
+  async initData() {
+    await this.userService.initData()
+    return 'done'
+  }
+
+  @Post('login')
+  async login(@Body() loginUser: UserLoginDto) {
+    const user = await this.userService.login(loginUser)
+    const token = this.jwtService.sign({
+      user: {
+        username: user.username,
+        roles: user.roles,
+      }
+    })
+    return {
+      token
+    }
   }
 
   @Get(':id')
@@ -31,4 +57,5 @@ export class UserController {
   remove(@Param('id') id: string) {
     return this.userService.remove(+id);
   }
-}
+
+} 

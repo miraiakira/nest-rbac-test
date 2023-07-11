@@ -21,5 +21,5 @@ export class Role {
     @JoinTable({
         name: 'role_permission_relation'
     })
-    permission: Permission[]
+    permissions: Permission[]
 }
